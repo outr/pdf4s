@@ -2,7 +2,7 @@ package org.matthicks.pdf4s
 
 import java.io.{File, FileOutputStream}
 
-import com.itextpdf.text.pdf.{PdfContentByte, PdfWriter}
+import com.itextpdf.text.pdf.{PdfContentByte, PdfReader, PdfWriter}
 import com.itextpdf.text.{BaseColor, Document, Font, Rectangle}
 
 import scala.annotation.tailrec
@@ -20,6 +20,12 @@ class PDFWriter(file: File,
   private val top = pageSize.getTop(margins.top.toFloat).toDouble
   private[pdf4s] var yOffset = top
   private val pageTop = pageSize.getTop.toDouble
+
+  def addPDF(pdfFile: File, x: Double, y: Double): Unit = {
+    val reader = new PdfReader(pdfFile.toURI.toURL)
+    val page = writer.getImportedPage(reader, 1)
+    content.addTemplate(page, x.toFloat, y.toFloat)
+  }
 
   def drawText(text: String, font: Font, x: Double, style: DrawStyle = DrawStyle.Normal): (Double, Double) = {
     val ascent = font.getBaseFont.getAscentPoint(text, font.getSize)
@@ -49,11 +55,11 @@ class PDFWriter(file: File,
     yOffset = y
   }
 
-  def drawText(text: String, font: Font, alignment: Int, x: Double): Unit = {
+  def drawTextPositioned(text: String, font: Font, alignment: Alignment, x: Double, y: Double = yOffset): Unit = {
     content.setColorFill(BaseColor.BLACK)
     content.beginText()
     content.setFontAndSize(font.getBaseFont, font.getSize)
-    content.showTextAligned(alignment, text, x.toFloat, yOffset.toFloat, 0.0f)
+    content.showTextAligned(alignment.value, text, x.toFloat, y.toFloat, 0.0f)
     content.endText()
   }
 
@@ -110,4 +116,12 @@ object DrawStyle {
   case object SmallCaps extends DrawStyle
   case object Superscript extends DrawStyle
   case object Subscript extends DrawStyle
+}
+
+sealed abstract class Alignment(val value: Int)
+
+object Alignment {
+  case object Left extends Alignment(PdfContentByte.ALIGN_LEFT)
+  case object Center extends Alignment(PdfContentByte.ALIGN_CENTER)
+  case object Right extends Alignment(PdfContentByte.ALIGN_RIGHT)
 }
