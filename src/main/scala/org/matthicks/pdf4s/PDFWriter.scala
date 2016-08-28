@@ -1,9 +1,10 @@
 package org.matthicks.pdf4s
 
 import java.io.{File, FileOutputStream}
+import java.net.URL
 
 import com.itextpdf.text.pdf.{PdfContentByte, PdfReader, PdfWriter}
-import com.itextpdf.text.{BaseColor, Document, Font, Rectangle}
+import com.itextpdf.text.{BaseColor, Document, Font, Image, Rectangle}
 
 import scala.annotation.tailrec
 
@@ -21,10 +22,16 @@ class PDFWriter(file: File,
   private[pdf4s] var yOffset = top
   private val pageTop = pageSize.getTop.toDouble
 
-  def addPDF(pdfFile: File, x: Double, y: Double): Unit = {
+  def addPDF(pdfFile: File, x: Double, y: Double, pageNumber: Int = 1, scaleX: Double = 1.0, scaleY: Double = 1.0): Unit = {
     val reader = new PdfReader(pdfFile.toURI.toURL)
-    val page = writer.getImportedPage(reader, 1)
-    content.addTemplate(page, x.toFloat, y.toFloat)
+    val page = writer.getImportedPage(reader, pageNumber)
+    content.addTemplate(page, scaleX, 0.0, 0.0, scaleY, x, y)
+  }
+
+  def drawImage(url: URL, x: Double, y: Double, inline: Boolean = true): Unit = {
+    val image = Image.getInstance(url)
+    image.setAbsolutePosition(x.toFloat, y.toFloat)
+    content.addImage(image, inline)
   }
 
   def drawText(text: String, font: Font, x: Double, style: DrawStyle = DrawStyle.Normal): (Double, Double) = {
