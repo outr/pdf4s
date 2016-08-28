@@ -22,6 +22,8 @@ class PDFWriter(file: File,
   private[pdf4s] var yOffset = top
   private val pageTop = pageSize.getTop.toDouble
 
+  def center: Double = pageSize.getWidth / 2.0
+
   def addPDF(pdfFile: File, x: Double, y: Double, pageNumber: Int = 1, scaleX: Double = 1.0, scaleY: Double = 1.0): Unit = {
     val reader = new PdfReader(pdfFile.toURI.toURL)
     val page = writer.getImportedPage(reader, pageNumber)
