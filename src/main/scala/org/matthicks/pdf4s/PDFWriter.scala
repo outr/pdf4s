@@ -3,6 +3,7 @@ package org.matthicks.pdf4s
 import java.io.{File, FileOutputStream}
 import java.net.URL
 
+import com.itextpdf.awt.geom.AffineTransform
 import com.itextpdf.text.pdf.{PdfContentByte, PdfReader, PdfWriter}
 import com.itextpdf.text.{BaseColor, Document, Font, Image, Rectangle}
 
@@ -12,10 +13,12 @@ class PDFWriter(file: File,
                 pageSize: Rectangle,
                 breakAtBeginning: Boolean = false,
                 breakAmount: Double = 5.0,
-                margins: Margins = Margins()) {
+                margins: Margins = Margins(),
+                conformance: Option[Int] = None) {
   private val document = new Document(pageSize, margins.left.toFloat, margins.right.toFloat, margins.top.toFloat, margins.bottom.toFloat)
   private val output = new FileOutputStream(file)
   private val writer = PdfWriter.getInstance(document, output)
+  conformance.foreach(writer.setPDFXConformance)
   document.open()
   private val content = writer.getDirectContent
   private val top = pageSize.getTop(margins.top.toFloat).toDouble
@@ -64,11 +67,19 @@ class PDFWriter(file: File,
     yOffset = y
   }
 
-  def drawTextPositioned(text: String, font: Font, alignment: Alignment, x: Double, y: Double = yOffset): Unit = {
-    content.setColorFill(BaseColor.BLACK)
+  def drawTextPositioned(text: String,
+                         font: Font,
+                         alignment: Alignment,
+                         x: Double,
+                         y: Double = yOffset,
+                         rotation: Double = 0.0,
+                         color: BaseColor = BaseColor.BLACK,
+                         transform: Option[AffineTransform] = None): Unit = {
+    content.setColorFill(color)
+    transform.foreach(content.transform)
     content.beginText()
     content.setFontAndSize(font.getBaseFont, font.getSize)
-    content.showTextAligned(alignment.value, text, x.toFloat, y.toFloat, 0.0f)
+    content.showTextAligned(alignment.value, text, x.toFloat, y.toFloat, rotation.toFloat)
     content.endText()
   }
 
